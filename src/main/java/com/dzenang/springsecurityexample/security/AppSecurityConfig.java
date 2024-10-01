@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 
 @Configuration
 @EnableWebSecurity
@@ -57,7 +58,12 @@ public class AppSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // todo update
-        http.csrf(AbstractHttpConfigurer::disable)
+        http
+                .headers(headersConfigurer ->
+                        headersConfigurer.xssProtection(xXssConfig ->
+                                        xXssConfig.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                                .contentSecurityPolicy(csp -> csp.policyDirectives("script-src 'self'")))
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                 auth -> auth.requestMatchers("/auth/signup", "/auth/login").permitAll()
                         .anyRequest().authenticated())
